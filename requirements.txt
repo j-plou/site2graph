@@ -1,0 +1,6 @@
+twisted
+scrapy
+mypy
+flake8
+black
+isort

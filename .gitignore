@@ -1,0 +1,6 @@
+env
+env_ok
+__pycache__
+*.json
+*.json.gz
+_trial_temp
