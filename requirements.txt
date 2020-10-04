@@ -1,6 +1,5 @@
-twisted
-scrapy
-mypy
-flake8
-black
-isort
+Scrapy==2.3.*
+mypy==0.782
+flake8==3.8.*
+black~=20.8b1
+isort==5.5.*

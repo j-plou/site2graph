@@ -116,6 +116,7 @@ class ChecksSpider(scrapy.Spider):
             )
 
     def should_follow_url(self, url: str) -> bool:
+
         if self.exclude_url_re is not None:
             if re.match(self.exclude_url_re, url):
                 return False
@@ -192,7 +193,7 @@ class ChecksSpider(scrapy.Spider):
 
         yield self.get_response_obj(id, response)
 
-        extractor = LinkExtractor(process_value=process_tel_value)
+        extractor = LinkExtractor()
 
         try:
             links = extractor.extract_links(response)
@@ -201,30 +202,30 @@ class ChecksSpider(scrapy.Spider):
 
         for link in links:
             url = link.url
-            yield make_link(id, response.url, str(response.status), url, link.nofollow)
+            if not is_tel_url(url):
+                yield make_link(
+                    id, response.url, str(response.status), url, link.nofollow
+                )
 
-            if not link.nofollow:
+                if not link.nofollow:
 
-                if self.should_follow_url(url):
-                    yield response.follow(
-                        link,
-                        callback=self.parse,
-                        errback=self.errback,
-                    )
+                    if self.should_follow_url(url):
+                        yield response.follow(
+                            link,
+                            callback=self.parse,
+                            errback=self.errback,
+                        )
 
 
-def process_tel_value(value: str) -> Optional[str]:
+def is_tel_url(url: str) -> bool:
     """
     Work around tel: scrapy bug https://github.com/scrapy/scrapy/issues/1381
     """
-    if re.match("tel:.+", value):
-        return None
-    else:
-        return value
+    last_chunk = url.split("/")[-1]
+    return re.match("tel:[0-9]+", last_chunk) is not None
 
 
 class Test(unittest.TestCase):
     def test_tel(self):
-        self.assertIsNone(process_tel_value("tel:2345234"))
-        self.assertIsNone(process_tel_value("tel:+2345234"))
-        self.assertEqual(process_tel_value("../link"), "../link")
+        self.assertTrue(is_tel_url("http://example.com/tel:2345234"))
+        self.assertFalse(is_tel_url("http://example.com/tel:2345234/trailing"))
