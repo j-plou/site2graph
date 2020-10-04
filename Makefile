@@ -6,10 +6,6 @@ fmt: env_ok
 	env/bin/isort -sp .isort.cfg $(py_dirs)
 	env/bin/black $(py_files)
 
-.PHONY: test
-test: check
-	env/bin/python -m twisted.trial $(py_dirs)
-
 .PHONY: check
 check: env_ok
 	env/bin/python -m mypy \
@@ -20,6 +16,9 @@ check: env_ok
 	env/bin/isort  -sp .isort.cfg  $(py_dirs) --check
 	env/bin/black --check $(py_files)
 
+.PHONY: test
+test: check
+	env/bin/python -m unittest discover $(py_dirs) -p "*.py"
 
 env_ok: requirements.txt
 	rm -rf env env_ok
@@ -30,4 +29,4 @@ env_ok: requirements.txt
 
 .PHONY: clean
 clean:
-	rm -rf env env_ok test_env
+	rm -rf env env_ok

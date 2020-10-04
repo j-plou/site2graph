@@ -1,4 +1,5 @@
 import re
+import unittest
 import urllib.parse
 import uuid
 from typing import Any, Dict, List, Optional
@@ -220,3 +221,10 @@ def process_tel_value(value: str) -> Optional[str]:
         return None
     else:
         return value
+
+
+class Test(unittest.TestCase):
+    def test_tel(self):
+        self.assertIsNone(process_tel_value("tel:2345234"))
+        self.assertIsNone(process_tel_value("tel:+2345234"))
+        self.assertEqual(process_tel_value("../link"), "../link")

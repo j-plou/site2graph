@@ -14,6 +14,7 @@ BOT_NAME = "site2graph"
 SPIDER_MODULES = ["site2graph.spiders"]
 NEWSPIDER_MODULE = "site2graph.spiders"
 
+LOG_LEVEL = "INFO"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'site2graph (+http://www.yourdomain.com)'
