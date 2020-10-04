@@ -1,3 +1,5 @@
+import argparse
+import csv
 import json
 import sys
 from collections import defaultdict
@@ -63,8 +65,15 @@ def to_page_error_list(
     return sorted(res)
 
 
-def print_grouped(errors: Dict[str, Set], pages: Dict[str, Set[str]]) -> None:
+def print_csv(errors: Dict[str, Set], pages: Dict[str, Set[str]]) -> None:
+    writer = csv.writer(sys.stdout)
+    writer.writerow(PageError._fields)
 
+    for page_error in to_page_error_list(errors, pages):
+        writer.writerow(page_error)
+
+
+def print_grouped(errors: Dict[str, Set], pages: Dict[str, Set[str]]) -> None:
     for link, vs in sorted(errors.items()):
         print(link)
         print("\terrors:", sorted(vs))
@@ -75,6 +84,18 @@ def print_grouped(errors: Dict[str, Set], pages: Dict[str, Set[str]]) -> None:
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--output_format",
+        required=True,
+        choices=["csv", "friendly"],
+        help="output format",
+    )
+
+    args = parser.parse_args()
+
     errors: Dict[str, Set] = defaultdict(set)
     pages: Dict[str, Set[str]] = defaultdict(set)
 
@@ -83,6 +104,7 @@ if __name__ == "__main__":
         error_add_item(item, errors)
         pages_add_item(item, pages)
 
-    # page_errors = to_page_error_list(errors, pages)
-    # print(tabulate(page_errors, headers=PageError._fields))
-    print_grouped(errors, pages)
+    if args.output_format == "friendly":
+        print_grouped(errors, pages)
+    else:
+        print_csv(errors, pages)

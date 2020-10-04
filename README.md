@@ -44,7 +44,7 @@ env/bin/scrapy crawl checks \
 We can pipe the `site.json` file to the `get_errors` utility; this will report things like 404 links, 500 errors and redirect loops:
 
 ```bash
-cat site.json | env/bin/python -m site2graph.get_errors
+cat site.json | env/bin/python -m site2graph.get_errors --output_format friendly
 ```
 
 ### Development
