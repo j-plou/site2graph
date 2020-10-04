@@ -1,9 +1,15 @@
 import json
 import sys
 from collections import defaultdict
-from typing import Dict, Set
+from typing import Dict, List, NamedTuple, Set
 
 MAX_REDIRECTS = 10
+
+
+class PageError(NamedTuple):
+    page: str
+    link: str
+    error: str
 
 
 def error_add_item(item, errors: Dict[str, Set]) -> None:
@@ -35,26 +41,48 @@ def error_add_response(item, errors: Dict[str, Set]) -> None:
             errors[url].add(status)
 
 
-def links_add_item(item, links: Dict[str, Set[str]]):
+def pages_add_item(item, pages: Dict[str, Set[str]]):
     if item["type"] == "link":
         status = item["status"]
         if 200 >= int(status) < 300:
             src = item["url"]
             dst = item["target"]
-            links[dst].add(src)
+            pages[dst].add(src)
+
+
+def to_page_error_list(
+    errors: Dict[str, Set], pages: Dict[str, Set[str]]
+) -> List[PageError]:
+    res: List[PageError] = []
+
+    for link, vs in errors.items():
+        for page in pages[link]:
+            for error in vs:
+                res.append(PageError(page=page, link=link, error=error))
+
+    return sorted(res)
+
+
+def print_grouped(errors: Dict[str, Set], pages: Dict[str, Set[str]]) -> None:
+
+    for link, vs in sorted(errors.items()):
+        print(link)
+        print("\terrors:", sorted(vs))
+        print("\tfound in pages:")
+        for page in sorted(pages[link]):
+            print("\t{0}".format(page))
+        print()
 
 
 if __name__ == "__main__":
     errors: Dict[str, Set] = defaultdict(set)
-    links: Dict[str, Set[str]] = defaultdict(set)
+    pages: Dict[str, Set[str]] = defaultdict(set)
 
     for line in sys.stdin:
         item = json.loads(line)
         error_add_item(item, errors)
-        links_add_item(item, links)
+        pages_add_item(item, pages)
 
-    for k, vs in sorted(errors.items()):
-        print(k)
-        print("errors:", sorted(vs))
-        print("links:", sorted(links[k]))
-        print()
+    # page_errors = to_page_error_list(errors, pages)
+    # print(tabulate(page_errors, headers=PageError._fields))
+    print_grouped(errors, pages)

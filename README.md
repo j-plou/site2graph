@@ -1,6 +1,8 @@
 ## site2graph
 
-Utilities for detecting errors in websites and dealing with site graphs.
+Utilities for detecting errors in websites and inspecting site graphs.
+
+It might evolve into an open source alternative to [screaming frog](https://www.screamingfrog.co.uk/seo-spider/), at least for some SEO errors.
 
 * [Overview](#Overview)
 * [Usage](#Usage)
@@ -14,7 +16,7 @@ Utilities for detecting errors in websites and dealing with site graphs.
 Things you can do with this:
 
 * detect errors in your website: broken links, 500, redirect loops
-* crawl a website's links and metadata into a generic json representation
+* crawl a website's links and metadata into a generic json representation that's easy to deal with for further processing
 
 ### Usage
 
