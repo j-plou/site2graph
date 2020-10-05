@@ -1,5 +1,7 @@
 ## site2graph
 
+[![miguelsimon](https://circleci.com/gh/miguelsimon/site2graph.svg?style=shield)](https://circleci.com/gh/miguelsimon/site2graph)
+
 Utilities for detecting errors in websites and inspecting site graphs.
 
 It might evolve into an open source alternative to [screaming frog](https://www.screamingfrog.co.uk/seo-spider/), at least for some SEO errors.
