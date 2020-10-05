@@ -44,7 +44,7 @@ def error_add_response(item, errors: Dict[str, Set]) -> None:
 
 
 def pages_add_item(item, pages: Dict[str, Set[str]]):
-    if item["type"] == "link":
+    if item["type"] == "link" and not item["nofollow"]:
         status = item["status"]
         if 200 >= int(status) < 300:
             src = item["url"]

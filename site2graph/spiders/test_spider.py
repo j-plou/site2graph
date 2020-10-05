@@ -1,3 +1,4 @@
+import logging
 import re
 import unittest
 import urllib.parse
@@ -5,9 +6,12 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 import scrapy
+import scrapy.exceptions
 import scrapy.spidermiddlewares.httperror
 import twisted.internet.error
 from scrapy.linkextractors import LinkExtractor
+
+logger = logging.getLogger(__name__)
 
 
 def make_response(
@@ -83,7 +87,10 @@ class ChecksSpider(scrapy.Spider):
             "scrapy.spidermiddlewares.referer.RefererMiddleware": 700,
             "scrapy.spidermiddlewares.urllength.UrlLengthMiddleware": 800,
             "scrapy.spidermiddlewares.depth.DepthMiddleware": 900,
-        }
+        },
+        "DOWNLOADER_MIDDLEWARES": {
+            "site2graph.middlewares.MyDownloaderMiddleware": 1000,
+        },
     }
 
     def __init__(
@@ -153,19 +160,35 @@ class ChecksSpider(scrapy.Spider):
 
         return make_headers(id, response.url, str(response.status), header_dict)
 
+    def get_links(self, response) -> List:
+        extractor = LinkExtractor()
+
+        try:
+            links = extractor.extract_links(response)
+            return [link for link in links if not is_tel_url(link.url)]
+        except AttributeError:
+            return []
+
     def errback(self, failure, root_link=None):
+
         if root_link:
             yield root_link
 
         id = uuid.uuid4().hex
 
-        if failure.check(scrapy.spidermiddlewares.httperror.HttpError):
+        if failure.check(scrapy.exceptions.IgnoreRequest):
+            pass
+        elif failure.check(scrapy.spidermiddlewares.httperror.HttpError):
             yield self.get_response_obj(id, failure.value.response)
             yield self.get_headers_obj(id, failure.value.response)
         elif failure.check(twisted.internet.error.DNSLookupError):
             yield make_dns_error(id, failure.request.url)
-        elif failure.check(TimeoutError, twisted.internet.error.TCPTimedOutError):
+        elif failure.check(twisted.internet.error.TimeoutError, twisted.internet.error.TCPTimedOutError):
             yield make_timeout_error(id, failure.request.url)
+        else:
+            logger.info(
+                "unhandled errback: {0} {1}".format(failure.type, failure.request.url)
+            )
 
     def parse(self, response, root_link=None):
         if root_link:
@@ -193,28 +216,20 @@ class ChecksSpider(scrapy.Spider):
 
         yield self.get_response_obj(id, response)
 
-        extractor = LinkExtractor()
+        if self.should_follow_url(response.url):
 
-        try:
-            links = extractor.extract_links(response)
-        except AttributeError:
-            links = []
+            for link in self.get_links(response):
+                url = link.url
 
-        for link in links:
-            url = link.url
-            if not is_tel_url(url):
                 yield make_link(
                     id, response.url, str(response.status), url, link.nofollow
                 )
 
-                if not link.nofollow:
-
-                    if self.should_follow_url(url):
-                        yield response.follow(
-                            link,
-                            callback=self.parse,
-                            errback=self.errback,
-                        )
+                yield response.follow(
+                    link,
+                    callback=self.parse,
+                    errback=self.errback,
+                )
 
 
 def is_tel_url(url: str) -> bool:
