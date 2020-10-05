@@ -89,7 +89,7 @@ class ChecksSpider(scrapy.Spider):
             "scrapy.spidermiddlewares.depth.DepthMiddleware": 900,
         },
         "DOWNLOADER_MIDDLEWARES": {
-            "site2graph.middlewares.MyDownloaderMiddleware": 1000,
+            "site2graph.middlewares.CatchAllDownloaderMiddleware": 1000,
         },
     }
 
@@ -183,7 +183,9 @@ class ChecksSpider(scrapy.Spider):
             yield self.get_headers_obj(id, failure.value.response)
         elif failure.check(twisted.internet.error.DNSLookupError):
             yield make_dns_error(id, failure.request.url)
-        elif failure.check(twisted.internet.error.TimeoutError, twisted.internet.error.TCPTimedOutError):
+        elif failure.check(
+            twisted.internet.error.TimeoutError, twisted.internet.error.TCPTimedOutError
+        ):
             yield make_timeout_error(id, failure.request.url)
         else:
             logger.info(
