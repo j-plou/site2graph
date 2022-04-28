@@ -1,4 +1,4 @@
-Scrapy==2.3.*
+Scrapy==2.6.*
 networkx~=2.5
 mypy==0.782
 flake8==3.8.*
